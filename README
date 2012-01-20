@@ -1,0 +1,2 @@
+This tool helps you to write Nagios plugins. just have a look at libnagios-test.py
+If you don't know what the output means, please read the Nagios plugins documentation.
