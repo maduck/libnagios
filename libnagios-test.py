@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from libnagios import nagios
+from libnagios import Nagios
 
 class NagiosAssetTestCase(unittest.TestCase):
 
     def setUp(self):
         # initialize nagios instance
-        self.inst = nagios('Asset', debug=False)
+        self.inst = Nagios('Asset', debug=False)
         self.inst.add_check_variable('asset', float, "EUR", lambda x: x > 10, lambda x: x > 5 and x <= 10, lambda x: x <= 5)
         self.inst.add_check_variable('time', float)
 

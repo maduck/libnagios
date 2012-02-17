@@ -1,18 +1,77 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-class nagios():
-    OK = 0
-    WARNING = 1
-    CRITICAL = 2
-    UNKNOWN = 3
+STATES = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
 
+class CheckVariable(object):
+    """ class for one single variable to check """
+
+    def __init__(self, name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor, debug):
+        self.name = name
+        self.var_type = var_type
+        self.unit = unit
+        self.ok_condition = ok_condition
+        self.warn_condition = warn_condition
+        self.crit_condition = crit_condition
+        self.pre_processor = pre_processor
+        self.nagios_state = STATES.index('UNKNOWN')
+        self.debug = debug
+
+    def has_check_result(self):
+        return hasattr(self, 'check_result')
+
+    def has_value(self):
+        return hasattr(self, 'value')
+
+    def get_value(self):
+        if self.has_value():
+            try:
+                return self.value
+            except:
+                import pdb
+                pdb.set_trace()
+        else:
+            return None
+
+    def clear(self):
+        """ resets the former results """
+        if self.has_check_result():
+            del self.check_result
+        if self.has_value():
+            del self.value
+
+    def set_check_result(self, check_result):
+        self.check_result = check_result
+        self.process()
+        self.set_state()
+
+    def process(self):
+        if self.check_result:
+            try:
+                self.value = self.var_type(self.check_result)
+                if self.pre_processor:
+                    self.value = self.pre_processor(self.value)
+                    if self.debug:
+                        print "[DEBUG] Running Preprocessor on variable %s, new value: %s" % (self.name, self.value)
+            except Exception:
+                pass
+
+    def set_state(self):
+        if self.has_value():
+            if self.ok_condition(self.value):
+                self.nagios_state = STATES.index('OK')
+            elif self.warn_condition(self.value):
+                self.nagios_state = STATES.index('WARNING')
+            elif self.crit_condition(self.value):
+                self.nagios_state = STATES.index('CRITICAL')
+        if self.debug:
+            print "[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state])
+
+class Nagios(object):
     def __init__(self, service_name, debug=False):
-        self.states = ('OK', 'WARNING', 'CRITICAL', 'UNKNOWN')
-
         self.debug = debug
         self.service_name = service_name
-        self.check_variables = {}
+        self.check_variables = []
         self.check_result = 3
         self.performance_data = []
         self.main = None
@@ -21,62 +80,36 @@ class nagios():
         """
             removes any results so you can re-use this object
         """
-
         self.check_result = 3
         self.performance_data = []
-        for var_name in self.check_variables:
-            if 'check_result' in self.check_variables[var_name]:
-                del self.check_variables[var_name]['check_result']
-            if 'value' in self.check_variables[var_name]:
-                del self.check_variables[var_name]['value']
+        for variable in self.check_variables:
+            variable.clear()
 
     def add_check_variable(self, var_name, var_type, unit='', ok_condition=lambda x: True, warn_condition=None, crit_condition=None, pre_processor=None):
         if self.debug:
-            print "DEBUG: adding variable %s (%s)" % (var_name, var_type.__name__)
+            print "[DEBUG] adding variable %s (%s)" % (var_name, var_type.__name__)
         if len(self.check_variables) == 0:
             self.main = var_name
-        self.check_variables.update({var_name: {
-            'var_type': var_type,
-            'unit': unit,
-            'ok_condition': ok_condition,
-            'warn_condition': warn_condition,
-            'crit_condition': crit_condition,
-            'nagios_state': self.UNKNOWN,
-            'pre_processor': pre_processor,
-        }})
+        self.check_variables.append(CheckVariable(var_name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor, self.debug))
+
+    def __get_variable(self, name):
+        for i, variable in enumerate(self.check_variables):
+            if variable.name == name:
+                return i
+        return None
 
     def add_check_result(self, var_name, check_result):
-        if self.check_variables and var_name in self.check_variables:
-            self.check_variables[var_name]['check_result'] = check_result
+        variable = self.__get_variable(var_name)
+        if variable is not None:
             if self.debug:
-                print "DEBUG: Adding check result '%s' to variable %s" % (check_result, var_name)
-        elif self.debug:
-            print "DEBUG: Not knowing variable %s, not adding check result." % var_name
-        value = None
-        try:
-            value = self.check_variables[var_name]['var_type'](self.check_variables[var_name]['check_result'])
-            if self.check_variables[var_name]['pre_processor']:
-                value = self.check_variables[var_name]['pre_processor'](value)
-                if self.debug:
-                    print "DEBUG: Running Preprocessor on variable %s, new value: %s" % (var_name, value)
-        except:
-            pass
-        self.check_variables[var_name]['value'] = value
-        if value:
-            if self.check_variables[var_name]['ok_condition'](value):
-                self.check_variables[var_name]['nagios_state'] = self.OK
-            elif self.check_variables[var_name]['warn_condition'](value):
-                self.check_variables[var_name]['nagios_state'] = self.WARNING
-            elif self.check_variables[var_name]['crit_condition'](value):
-                self.check_variables[var_name]['nagios_state'] = self.CRITICAL
-            else:
-                self.check_variables[var_name]['nagios_state'] = self.UNKNOWN
+                print "[DEBUG] Adding check result '%s' to variable %s" % (check_result, var_name)
+            self.check_variables[variable].set_check_result(check_result)
         else:
-            self.check_variables[var_name]['nagios_state'] = self.UNKNOWN
-        if self.debug:
-            print "DEBUG: Variable %s yields nagios state %s" % (var_name, self.states[self.check_variables[var_name]['nagios_state']])
+            if self.debug:
+                print "[DEBUG] Not knowing variable %s, not adding check result." % var_name
+            return
 
-    def _format_single_number(self, number, var_type):
+    def __format_single_number(self, number, var_type):
         if number:
             try:
                 if var_type in (float, long):
@@ -92,25 +125,25 @@ class nagios():
 
     def generate_output(self, message=None):
                 output = ""
-                code = self.UNKNOWN
-                for var_name, variable in self.check_variables.items():
-                        state = self.states[variable['nagios_state']]
-                        result = self._format_single_number(variable['value'] if 'value' in variable else None, variable['var_type'])
-                        if result and state != 'UNKNOWN':
-                                if var_name == self.main:
-                                        code = variable['nagios_state']
-                                        if variable['unit']:
-                                                output = "%s %s - %s %s" % (self.service_name, state, result, variable['unit'])
-                                        else:
-                                                output = "%s %s - %s" % (self.service_name, state, result)
-                                if variable['var_type'] != str:
-                                        self.performance_data.append('%s=%s' % (var_name, result))
-                        elif message and var_name == self.main:
-                                code = variable['nagios_state']
-                                output = "%s %s - %s" % (self.service_name, state, message.strip())
-                        elif var_name == self.main:
-                                code = variable['nagios_state']
-                                output = "%s %s" % (self.service_name, state)
+                code = STATES.index('UNKNOWN')
+                for var in self.check_variables:
+                    state = STATES[var.nagios_state]
+                    result = self.__format_single_number(var.get_value(), var.var_type)
+                    if result and state != 'UNKNOWN':
+                        if var.name == self.main:
+                            code = var.nagios_state
+                            if var.unit:
+                                output = "%s %s - %s %s" % (self.service_name, state, result, var.unit)
+                            else:
+                                output = "%s %s - %s" % (self.service_name, state, result)
+                        if var.var_type != str:
+                                self.performance_data.append('%s=%s' % (var.name, result))
+                    elif message and var.name == self.main:
+                        code = var.nagios_state
+                        output = "%s %s - %s" % (self.service_name, state, message.strip())
+                    elif var.name == self.main:
+                        code = var.nagios_state
+                        output = "%s %s" % (self.service_name, state)
                 if len(self.performance_data) > 0:
                         output += " | %s" % ", ".join(self.performance_data)
                 return (code, output)
