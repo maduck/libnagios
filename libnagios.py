@@ -17,6 +17,19 @@ class nagios():
         self.performance_data = []
         self.main = None
 
+    def clear_results(self):
+        """
+            removes any results so you can re-use this object
+        """
+
+        self.check_result = 3
+        self.performance_data = []
+        for var_name in self.check_variables:
+            if 'check_result' in self.check_variables[var_name]:
+                del self.check_variables[var_name]['check_result']
+            if 'value' in self.check_variables[var_name]:
+                del self.check_variables[var_name]['value']
+
     def add_check_variable(self, var_name, var_type, unit='', ok_condition=lambda x: True, warn_condition=None, crit_condition=None, pre_processor=None):
         if self.debug:
             print "DEBUG: adding variable %s (%s)" % (var_name, var_type.__name__)
