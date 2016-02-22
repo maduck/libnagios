@@ -12,7 +12,7 @@ def read_input(message, default_value=None, result_type=str):
     result = None
     if default_value:
         try:
-            result = raw_input("%s [%s]: " % (message, default_value))
+            result = input("%s [%s]: " % (message, default_value))
         except KeyboardInterrupt:
             sys.exit(0)
         except (KeyboardInterrupt, EOFError):
@@ -22,7 +22,7 @@ def read_input(message, default_value=None, result_type=str):
     else:
         while not result:
             try:
-                result = raw_input("%s: " % message)
+                result = input("%s: " % message)
             except KeyboardInterrupt:
                 sys.exit(0)
             except (KeyboardInterrupt, EOFError):
@@ -43,5 +43,5 @@ downtime_end = downtime_start + downtime_length
 #/usr/bin/printf "[%lu] SCHEDULE_HOST_SVC_DOWNTIME;%s;%lu;%lu;0;0;7200;nagios console;Reboot\n" $now $host $now $then > $commandfile
 
 for host in hosts:
-    print "[%s] SCHEDULE_HOST_DOWNTIME;%s;%s;%s;0;0;%0.0f;nagios console;Reboot" % (downtime_start, host, downtime_start, downtime_end, downtime_length)
-    print "[%s] SCHEDULE_HOST_SVC_DOWNTIME;%s;%s;%s;0;0;%0.0f;nagios console;Reboot" % (downtime_start, host, downtime_start, downtime_end, downtime_length)
+    print("[%s] SCHEDULE_HOST_DOWNTIME;%s;%s;%s;0;0;%0.0f;nagios console;Reboot" % (downtime_start, host, downtime_start, downtime_end, downtime_length))
+    print("[%s] SCHEDULE_HOST_SVC_DOWNTIME;%s;%s;%s;0;0;%0.0f;nagios console;Reboot" % (downtime_start, host, downtime_start, downtime_end, downtime_length))

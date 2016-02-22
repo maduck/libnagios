@@ -52,7 +52,7 @@ class CheckVariable(object):
                 if self.pre_processor:
                     self.value = self.pre_processor(self.value)
                     if self.debug:
-                        print "[DEBUG] Running Preprocessor on variable %s, new value: %s" % (self.name, self.value)
+                        print("[DEBUG] Running Preprocessor on variable %s, new value: %s" % (self.name, self.value))
             except Exception:
                 pass
 
@@ -65,7 +65,7 @@ class CheckVariable(object):
             elif self.crit_condition(self.value):
                 self.nagios_state = STATES.index('CRITICAL')
         if self.debug:
-            print "[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state])
+            print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
 
 class Nagios(object):
     def __init__(self, service_name, debug=False):
@@ -87,7 +87,7 @@ class Nagios(object):
 
     def add_check_variable(self, var_name, var_type, unit='', ok_condition=lambda x: True, warn_condition=None, crit_condition=None, pre_processor=None):
         if self.debug:
-            print "[DEBUG] adding variable %s (%s)" % (var_name, var_type.__name__)
+            print("[DEBUG] adding variable %s (%s)" % (var_name, var_type.__name__))
         if len(self.check_variables) == 0:
             self.main = var_name
         self.check_variables.append(CheckVariable(var_name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor, self.debug))
@@ -102,17 +102,17 @@ class Nagios(object):
         variable = self.__get_variable(var_name)
         if variable is not None:
             if self.debug:
-                print "[DEBUG] Adding check result '%s' to variable %s" % (check_result, var_name)
+                print("[DEBUG] Adding check result '%s' to variable %s" % (check_result, var_name))
             self.check_variables[variable].set_check_result(check_result)
         else:
             if self.debug:
-                print "[DEBUG] Not knowing variable %s, not adding check result." % var_name
+                print("[DEBUG] Not knowing variable %s, not adding check result." % var_name)
             return
 
     def __format_single_number(self, number, var_type):
         if number:
             try:
-                if var_type in (float, long):
+                if var_type == float:
                     return "%0.2f" % number
                 elif var_type == int:
                     return "%d" % number
