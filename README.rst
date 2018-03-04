@@ -1,3 +1,8 @@
+.. image:: https://img.shields.io/travis/maduck/libnagios.svg?style=for-the-badge
+    :alt: Travis
+.. image:: https://img.shields.io/coveralls/github/maduck/libnagios.svg?style=for-the-badge
+    :alt: Coveralls github
+
 Nagios plugin helper library. It is now easy to write Nagios plugins in python without bothering with details.
 
 An example::
