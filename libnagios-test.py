@@ -9,7 +9,11 @@ class NagiosAssetTestCase(unittest.TestCase):
     def setUp(self):
         # initialize nagios instance
         self.inst = Nagios('Asset', debug=True)
-        self.inst.add_check_variable('asset', float, "EUR", lambda x: x > 10, lambda x: x > 5 and x <= 10, lambda x: x <= 5)
+        ok = lambda x: x > 10
+        warn = lambda x: x > 5 and x <= 10
+        crit = lambda x: x <= 5
+        pre_processor = lambda x: x
+        self.inst.add_check_variable('asset', float, "EUR", ok, warn, crit, pre_processor)
         self.inst.add_check_variable('time', float)
 
     def run_single_test(self, test):
