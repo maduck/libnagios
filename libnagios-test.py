@@ -54,7 +54,7 @@ class NagiosAssetTestCase(unittest.TestCase):
         tests = (
             {'vars': {'asset': 'a', 'time': '3.9'}, 'expected': (3, 'Asset UNKNOWN | time=3.90')},
             {'vars': {'time': '2.4'}, 'expected': (3, 'Asset UNKNOWN | time=2.40')},
-            {'vars': {}, 'expected': (3, 'Asset UNKNOWN')},
+            {'vars': {None: 'useless'}, 'expected': (3, 'Asset UNKNOWN')},
         )
         self.run_multiple_tests(tests)
 
