@@ -25,11 +25,7 @@ class CheckVariable(object):
 
     def get_value(self):
         if self.has_value():
-            try:
-                return self.value
-            except:
-                import pdb
-                pdb.set_trace()
+            return self.value
         else:
             return None
 
