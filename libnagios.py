@@ -26,8 +26,6 @@ class CheckVariable(object):
     def get_value(self):
         if self.has_value():
             return self.value
-        else:
-            return None
 
     def clear(self):
         """ resets the former results """
@@ -92,7 +90,6 @@ class Nagios(object):
         for i, variable in enumerate(self.check_variables):
             if variable.name == name:
                 return i
-        return None
 
     def add_check_result(self, var_name, check_result):
         variable = self.__get_variable(var_name)
@@ -103,7 +100,6 @@ class Nagios(object):
         else:
             if self.debug:
                 print("[DEBUG] Not knowing variable %s, not adding check result." % var_name)
-            return
 
     def __format_single_number(self, number, var_type):
         if number:
@@ -116,8 +112,6 @@ class Nagios(object):
                     return "%s" % number
             except:
                 return "%s" % number
-        else:
-            return None
 
     def generate_output(self, message=None):
                 output = ""
