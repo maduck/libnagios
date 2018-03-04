@@ -8,7 +8,7 @@ class NagiosAssetTestCase(unittest.TestCase):
 
     def setUp(self):
         # initialize nagios instance
-        self.inst = Nagios('Asset', debug=False)
+        self.inst = Nagios('Asset', debug=True)
         self.inst.add_check_variable('asset', float, "EUR", lambda x: x > 10, lambda x: x > 5 and x <= 10, lambda x: x <= 5)
         self.inst.add_check_variable('time', float)
 
