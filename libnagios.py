@@ -107,15 +107,13 @@ class Nagios(object):
                 print("[DEBUG] Not knowing variable %s, not adding check result." % var_name)
 
     def __format_single_number(self, number, var_type):
-        if number:
+        if number is not None:
             try:
                 if var_type == float:
                     return "%0.2f" % number
-                elif var_type == int:
-                    return "%d" % number
                 else:
                     return "%s" % number
-            except:
+            except TypeError:
                 return "%s" % number
 
     def generate_output(self, message=None):
