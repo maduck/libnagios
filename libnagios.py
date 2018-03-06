@@ -3,6 +3,7 @@
 
 STATES = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
 
+
 class CheckVariable(object):
     """ class for one single variable to check """
 
@@ -61,6 +62,7 @@ class CheckVariable(object):
         if self.debug:
             print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
 
+
 class Nagios(object):
     def __init__(self, service_name, debug=False):
         self.debug = debug
@@ -79,12 +81,15 @@ class Nagios(object):
         for variable in self.check_variables:
             variable.clear()
 
-    def add_check_variable(self, var_name, var_type, unit='', ok_condition=lambda x: True, warn_condition=None, crit_condition=None, pre_processor=None):
+    def add_check_variable(self, var_name, var_type, unit='', ok_condition=lambda x: True, warn_condition=None,
+                           crit_condition=None, pre_processor=None):
         if self.debug:
             print("[DEBUG] adding variable %s (%s)" % (var_name, var_type.__name__))
         if len(self.check_variables) == 0:
             self.main = var_name
-        self.check_variables.append(CheckVariable(var_name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor, self.debug))
+        self.check_variables.append(
+            CheckVariable(var_name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor,
+                          self.debug))
 
     def __get_variable(self, name):
         for i, variable in enumerate(self.check_variables):
@@ -114,26 +119,26 @@ class Nagios(object):
                 return "%s" % number
 
     def generate_output(self, message=None):
-                output = ""
-                code = STATES.index('UNKNOWN')
-                for var in self.check_variables:
-                    state = STATES[var.nagios_state]
-                    result = self.__format_single_number(var.get_value(), var.var_type)
-                    if result and state != 'UNKNOWN':
-                        if var.name == self.main:
-                            code = var.nagios_state
-                            if var.unit:
-                                output = "%s %s - %s %s" % (self.service_name, state, result, var.unit)
-                            else:
-                                output = "%s %s - %s" % (self.service_name, state, result)
-                        if var.var_type != str:
-                                self.performance_data.append('%s=%s' % (var.name, result))
-                    elif message and var.name == self.main:
-                        code = var.nagios_state
-                        output = "%s %s - %s" % (self.service_name, state, message.strip())
-                    elif var.name == self.main:
-                        code = var.nagios_state
-                        output = "%s %s" % (self.service_name, state)
-                if len(self.performance_data) > 0:
-                        output += " | %s" % ", ".join(self.performance_data)
-                return (code, output)
+        output = ""
+        code = STATES.index('UNKNOWN')
+        for var in self.check_variables:
+            state = STATES[var.nagios_state]
+            result = self.__format_single_number(var.get_value(), var.var_type)
+            if result and state != 'UNKNOWN':
+                if var.name == self.main:
+                    code = var.nagios_state
+                    if var.unit:
+                        output = "%s %s - %s %s" % (self.service_name, state, result, var.unit)
+                    else:
+                        output = "%s %s - %s" % (self.service_name, state, result)
+                if var.var_type != str:
+                    self.performance_data.append('%s=%s' % (var.name, result))
+            elif message and var.name == self.main:
+                code = var.nagios_state
+                output = "%s %s - %s" % (self.service_name, state, message.strip())
+            elif var.name == self.main:
+                code = var.nagios_state
+                output = "%s %s" % (self.service_name, state)
+        if len(self.performance_data) > 0:
+            output += " | %s" % ", ".join(self.performance_data)
+        return (code, output)

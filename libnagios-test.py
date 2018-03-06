@@ -4,6 +4,7 @@
 import unittest
 from libnagios import Nagios
 
+
 class NagiosAssetTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -57,6 +58,7 @@ class NagiosAssetTestCase(unittest.TestCase):
             {'vars': {None: 'useless'}, 'expected': (3, 'Asset UNKNOWN')},
         )
         self.run_multiple_tests(tests)
+
 
 if __name__ == '__main__':
     unittest.main()
