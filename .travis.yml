@@ -6,4 +6,4 @@ install:
 script:
   - coverage run libnagios-test.py
 after_success:
-  - coveralls
+  - coveralls -v
