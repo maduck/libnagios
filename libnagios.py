@@ -71,7 +71,7 @@ class Nagios(object):
         self.debug = debug
         self.service_name = service_name
         self.check_variables = {}
-        self.check_result = 3
+        self.check_result = STATES.index('UNKNOWN')
         self.performance_data = []
         self.main = None
 
@@ -79,7 +79,7 @@ class Nagios(object):
         """
             removes any results so you can re-use this object
         """
-        self.check_result = 3
+        self.check_result = STATES.index('UNKNOWN')
         self.performance_data = []
         for variable in self.check_variables.values():
             variable.clear()
