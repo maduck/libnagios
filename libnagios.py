@@ -106,7 +106,8 @@ class Nagios(object):
             if self.debug:
                 print("[DEBUG] Not knowing variable %s, not adding check result." % var_name)
 
-    def __format_single_number(self, number, var_type):
+    @classmethod
+    def __format_single_number(cls, number, var_type):
         if number is not None:
             try:
                 if var_type == float:
