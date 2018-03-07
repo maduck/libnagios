@@ -58,14 +58,12 @@ class CheckVariable(object):
 
     def set_state(self):
         if self.has_value():
-            if self.ok_condition(self.value):
-                self.nagios_state = STATES.index('OK')
-            elif self.warn_condition(self.value):
-                self.nagios_state = STATES.index('WARNING')
-            elif self.crit_condition(self.value):
-                self.nagios_state = STATES.index('CRITICAL')
-        if self.debug:
-            print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
+            evaluations = (self.ok_condition, self.warn_condition, self.crit_condition)
+            for state, evaluation in enumerate(evaluations):
+                if evaluation and evaluation(self.value):
+                    self.nagios_state = state
+            if self.debug:
+                print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
 
     def pretty_format(self):
         result = str(self)
