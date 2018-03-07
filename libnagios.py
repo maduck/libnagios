@@ -22,9 +22,6 @@ class CheckVariable(object):
         self.nagios_state = STATES.index('UNKNOWN')
         self.debug = debug
 
-    def has_value(self):
-        return self.value is not None
-
     def has_perfdata(self):
         return self.value is not None and self.var_type in (float, int)
 
