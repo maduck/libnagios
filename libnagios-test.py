@@ -59,6 +59,12 @@ class NagiosAssetTestCase(unittest.TestCase):
         )
         self.run_multiple_tests(tests)
 
+    def testOverride(self):
+        message = 'override message'
+        expected = (3, 'Asset UNKNOWN - override message')
+        output = self.inst.generate_output(override_message=message)
+        self.assertEquals(output, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
