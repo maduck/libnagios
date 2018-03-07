@@ -14,6 +14,10 @@
    :target: https://www.codacy.com/app/maduck/libnagios
    :alt: Codacy grade
 
+.. image:: https://api.codeclimate.com/v1/badges/cbe1003f499631f2729c/maintainability
+   :target: https://codeclimate.com/github/maduck/libnagios/maintainability
+   :alt: Maintainability
+
 Nagios plugin helper library. It is now easy to write Nagios plugins in python without bothering with details.
 
 An example::
