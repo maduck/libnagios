@@ -21,21 +21,25 @@ class CheckVariable(object):
         self.debug = debug
 
     def has_check_result(self):
-        return hasattr(self, 'check_result')
+        return self.check_result is not None
 
     def has_value(self):
-        return hasattr(self, 'value')
+        return self.value is not None
 
     def get_value(self):
         if self.has_value():
             return self.value
 
+    def has_perfdata(self):
+        return self.value is not None and self.var_type in (float, int)
+
+    def get_perfdata(self):
+        return "%s=%0.2f" % (self.name, self.value)
+
     def clear(self):
         """ resets the former results """
-        if self.has_check_result():
-            del self.check_result
-        if self.has_value():
-            del self.value
+        self.check_result = None
+        self.value = None
 
     def set_check_result(self, check_result):
         self.check_result = check_result
@@ -64,6 +68,18 @@ class CheckVariable(object):
                 self.nagios_state = STATES.index('CRITICAL')
         if self.debug:
             print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
+
+    def pretty_format(self):
+        result = str(self)
+        if self.unit:
+            result = "%s %s" % (result, self.unit)
+        return result
+
+    def __str__(self):
+        result = "%s" % self.value
+        if self.var_type == float:
+            result = "%0.2f" % self.value
+        return result
 
 
 class Nagios(object):
@@ -103,38 +119,23 @@ class Nagios(object):
             if self.debug:
                 print("[DEBUG] Not knowing variable %s, not adding check result." % var_name)
 
-    @classmethod
-    def __format_single_number(cls, number, var_type):
-        if number is not None:
-            try:
-                if var_type == float:
-                    return "%0.2f" % number
-                else:
-                    return "%s" % number
-            except TypeError:
-                return "%s" % number
-
-    def generate_output(self, message=None):
+    def generate_output(self, override_message=None):
         output = ""
-        code = STATES.index('UNKNOWN')
+        return_code = STATES.index('UNKNOWN')
         for var in self.check_variables.values():
             state = STATES[var.nagios_state]
-            result = self.__format_single_number(var.get_value(), var.var_type)
-            if result and state != 'UNKNOWN':
-                if var.name == self.main:
-                    code = var.nagios_state
-                    if var.unit:
-                        output = "%s %s - %s %s" % (self.service_name, state, result, var.unit)
-                    else:
-                        output = "%s %s - %s" % (self.service_name, state, result)
-                if var.var_type != str:
-                    self.performance_data.append('%s=%s' % (var.name, result))
-            elif message and var.name == self.main:
-                code = var.nagios_state
-                output = "%s %s - %s" % (self.service_name, state, message.strip())
-            elif var.name == self.main:
-                code = var.nagios_state
-                output = "%s %s" % (self.service_name, state)
-        if len(self.performance_data) > 0:
+            if var.name == self.main:
+                if override_message:
+                    return_code = var.nagios_state
+                    output = "%s %s - %s" % (self.service_name, state, override_message.strip())
+                elif var.has_value():
+                    return_code = var.nagios_state
+                    output = "%s %s - %s" % (self.service_name, state, var.pretty_format())
+                else:
+                    return_code = var.nagios_state
+                    output = "%s %s" % (self.service_name, state)
+            if var.has_perfdata():
+                self.performance_data.append(var.get_perfdata())
+        if self.performance_data:
             output += " | %s" % ", ".join(self.performance_data)
-        return (code, output)
+        return return_code, output
