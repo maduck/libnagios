@@ -47,13 +47,14 @@ class CheckVariable(object):
                 print("[DEBUG] Preprocessor failed: %s" % e)
 
     def set_state(self):
-        if self.value is not None:
-            evaluations = (self.ok_condition, self.warn_condition, self.crit_condition)
-            for state, evaluation in enumerate(evaluations):
-                if evaluation and evaluation(self.value):
-                    self.nagios_state = state
-            if self.debug:
-                print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
+        if self.value is None:
+            return
+        evaluations = (self.ok_condition, self.warn_condition, self.crit_condition)
+        for state, evaluation in enumerate(evaluations):
+            if evaluation and evaluation(self.value):
+                self.nagios_state = state
+        if self.debug:
+            print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
 
     def pretty_format(self):
         result = str(self)
