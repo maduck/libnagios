@@ -10,7 +10,7 @@
    :target: https://landscape.io/github/maduck/libnagios/master
    :alt: Code Health
 
-.. image:: https://img.shields.io/codacy/grade/e27821fb6289410b8f58338c7e0bc686.svg?style=flat-square
+.. image:: https://img.shields.io/codacy/grade/bbf4f311bc9246b5b07df02e4d7f39e5.svg?style=flat-square
    :target: https://www.codacy.com/app/maduck/libnagios
    :alt: Codacy grade
 
