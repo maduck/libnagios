@@ -22,15 +22,8 @@ class CheckVariable(object):
         self.nagios_state = STATES.index('UNKNOWN')
         self.debug = debug
 
-    def has_check_result(self):
-        return self.check_result is not None
-
     def has_value(self):
         return self.value is not None
-
-    def get_value(self):
-        if self.has_value():
-            return self.value
 
     def has_perfdata(self):
         return self.value is not None and self.var_type in (float, int)
@@ -57,7 +50,7 @@ class CheckVariable(object):
                 print("[DEBUG] Preprocessor failed: %s" % e)
 
     def set_state(self):
-        if self.has_value():
+        if self.value is not None:
             evaluations = (self.ok_condition, self.warn_condition, self.crit_condition)
             for state, evaluation in enumerate(evaluations):
                 if evaluation and evaluation(self.value):
@@ -124,7 +117,7 @@ class Nagios(object):
                 if override_message:
                     return_code = var.nagios_state
                     output = "%s %s - %s" % (self.service_name, state, override_message.strip())
-                elif var.has_value():
+                elif var.value is not None:
                     return_code = var.nagios_state
                     output = "%s %s - %s" % (self.service_name, state, var.pretty_format())
                 else:
