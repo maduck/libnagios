@@ -14,7 +14,9 @@ class CheckVariable(object):
         self.ok_condition = ok_condition
         self.warn_condition = warn_condition
         self.crit_condition = crit_condition
-        self.pre_processor = pre_processor
+        self.pre_processor = lambda x: x
+        if pre_processor:
+            self.pre_processor = pre_processor
         self.value = None
         self.check_result = None
         self.nagios_state = STATES.index('UNKNOWN')
@@ -47,16 +49,12 @@ class CheckVariable(object):
         self.set_state()
 
     def process(self):
-        if self.check_result:
-            try:
-                self.value = self.var_type(self.check_result)
-                if self.pre_processor:
-                    self.value = self.pre_processor(self.value)
-                    if self.debug:
-                        print("[DEBUG] Running Preprocessor on variable %s, new value: %s" % (self.name, self.value))
-            except Exception as e:
-                if self.debug:
-                    print("[DEBUG] Preprocessor failed: %s" % e)
+        try:
+            self.value = self.var_type(self.check_result)
+            self.value = self.pre_processor(self.value)
+        except Exception as e:
+            if self.debug:
+                print("[DEBUG] Preprocessor failed: %s" % e)
 
     def set_state(self):
         if self.has_value():
