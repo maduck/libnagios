@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import logging
+import aenum
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
-STATES = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
+States = aenum.Enum('States', 'OK WARNING CRITICAL UNKNOWN', start=0)
 
 
 class CheckVariable(object):
@@ -21,7 +22,7 @@ class CheckVariable(object):
             self.pre_processor = pre_processor
         self.value = None
         self.check_result = None
-        self.nagios_state = STATES.index('UNKNOWN')
+        self.nagios_state = States.UNKNOWN
 
     def has_perfdata(self):
         return self.value is not None and self.var_type in (float, int)
@@ -50,10 +51,11 @@ class CheckVariable(object):
         if self.value is None:
             return
         evaluations = (self.ok_condition, self.warn_condition, self.crit_condition)
+        state = States.UNKNOWN
         for state, evaluation in enumerate(evaluations):
             if evaluation and evaluation(self.value):
-                self.nagios_state = state
-        logging.debug("Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
+                self.nagios_state = States(state)
+        logging.debug("Variable %s yields nagios state %r" % (self.name, state))
 
     def pretty_format(self):
         result = str(self)
@@ -72,14 +74,14 @@ class Nagios(object):
     def __init__(self, service_name):
         self.service_name = service_name
         self.check_variables = {}
-        self.check_result = STATES.index('UNKNOWN')
+        self.check_result = States.UNKNOWN
         self.main = None
 
     def clear_results(self):
         """
             removes any results so you can re-use this object
         """
-        self.check_result = STATES.index('UNKNOWN')
+        self.check_result = States.UNKNOWN
         for variable in self.check_variables.values():
             variable.clear()
 
@@ -110,17 +112,17 @@ class Nagios(object):
         return output
 
     def generate_return_code(self):
-        return_code = STATES.index('UNKNOWN')
+        state = States.UNKNOWN
         output = ""
         for var in self.check_variables.values():
             if var.name == self.main:
-                return_code = var.nagios_state
+                state = var.nagios_state
                 output = var.pretty_format()
-        return return_code, output
+        return state.value, output
 
     def generate_output(self, override_message=None):
         return_code, var_output = self.generate_return_code()
-        state = STATES[return_code]
+        state = States(return_code).name
         output = "%s %s - %s" % (self.service_name, state, var_output)
         if override_message is not None:
             output = "%s %s - %s" % (self.service_name, state, override_message.strip())
