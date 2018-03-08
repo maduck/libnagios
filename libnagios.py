@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
 STATES = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
 
 
@@ -111,21 +111,18 @@ class Nagios(object):
 
     def generate_return_code(self):
         return_code = STATES.index('UNKNOWN')
+        output = ""
         for var in self.check_variables.values():
             if var.name == self.main:
                 return_code = var.nagios_state
-        return return_code
+                output = var.pretty_format()
+        return return_code, output
 
     def generate_output(self, override_message=None):
-        output = ""
-        return_code = self.generate_return_code()
+        return_code, var_output = self.generate_return_code()
+        state = STATES[return_code]
+        output = "%s %s - %s" % (self.service_name, state, var_output)
         if override_message is not None:
-            output = "%s %s - %s" % (self.service_name, STATES[return_code], override_message.strip())
-        else:
-            for var in self.check_variables.values():
-                state = STATES[var.nagios_state]
-                if var.name == self.main:
-                    output = "%s %s - %s" % (self.service_name, state, var.pretty_format())
+            output = "%s %s - %s" % (self.service_name, state, override_message.strip())
         output += self.generate_performance_data()
-
         return return_code, output
