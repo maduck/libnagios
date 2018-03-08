@@ -1,13 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import logging
 
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.DEBUG)
 STATES = ['OK', 'WARNING', 'CRITICAL', 'UNKNOWN']
 
 
 class CheckVariable(object):
     """ class for one single variable to check """
 
-    def __init__(self, name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor, debug):
+    def __init__(self, name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor):
         self.name = name
         self.var_type = var_type
         self.unit = unit
@@ -20,7 +22,6 @@ class CheckVariable(object):
         self.value = None
         self.check_result = None
         self.nagios_state = STATES.index('UNKNOWN')
-        self.debug = debug
 
     def has_perfdata(self):
         return self.value is not None and self.var_type in (float, int)
@@ -43,8 +44,7 @@ class CheckVariable(object):
             self.value = self.var_type(self.check_result)
             self.value = self.pre_processor(self.value)
         except Exception as e:
-            if self.debug:
-                print("[DEBUG] Preprocessor failed: %s" % e)
+            logging.debug("Preprocessor failed: %s" % e)
 
     def set_state(self):
         if self.value is None:
@@ -53,8 +53,7 @@ class CheckVariable(object):
         for state, evaluation in enumerate(evaluations):
             if evaluation and evaluation(self.value):
                 self.nagios_state = state
-        if self.debug:
-            print("[DEBUG] Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
+        logging.debug("Variable %s yields nagios state %s" % (self.name, STATES[self.nagios_state]))
 
     def pretty_format(self):
         result = str(self)
@@ -70,8 +69,7 @@ class CheckVariable(object):
 
 
 class Nagios(object):
-    def __init__(self, service_name, debug=False):
-        self.debug = debug
+    def __init__(self, service_name):
         self.service_name = service_name
         self.check_variables = {}
         self.check_result = STATES.index('UNKNOWN')
@@ -89,22 +87,19 @@ class Nagios(object):
 
     def add_check_variable(self, var_name, var_type, unit='', ok_condition=lambda x: True, warn_condition=None,
                            crit_condition=None, pre_processor=None):
-        if self.debug:
-            print("[DEBUG] adding variable %s (%s)" % (var_name, var_type.__name__))
+        logging.debug("adding variable %s (%s)" % (var_name, var_type.__name__))
         if len(self.check_variables) == 0:
             self.main = var_name
         self.check_variables[var_name] = CheckVariable(var_name, var_type, unit, ok_condition,
-                                                       warn_condition, crit_condition, pre_processor, self.debug)
+                                                       warn_condition, crit_condition, pre_processor)
 
     def add_check_result(self, var_name, check_result):
         variable = self.check_variables.get(var_name)
         if variable is not None:
-            if self.debug:
-                print("[DEBUG] Adding check result '%s' to variable %s" % (check_result, var_name))
+            logging.debug("Adding check result '%s' to variable %s" % (check_result, var_name))
             variable.set_check_result(check_result)
         else:
-            if self.debug:
-                print("[DEBUG] Not knowing variable %s, not adding check result." % var_name)
+            logging.debug("Not knowing variable %s, not adding check result." % var_name)
 
     def generate_output(self, override_message=None):
         output = ""

@@ -9,7 +9,7 @@ class NagiosAssetTestCase(unittest.TestCase):
 
     def setUp(self):
         # initialize nagios instance
-        self.inst = Nagios('Asset', debug=True)
+        self.inst = Nagios('Asset')
         ok = lambda x: x > 10
         warn = lambda x: x > 5 and x <= 10
         crit = lambda x: x <= 5
