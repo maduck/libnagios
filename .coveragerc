@@ -1,2 +1,2 @@
-[report]
-omit = /home/travis/*
+[run]
+omit = *aenum*
