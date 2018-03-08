@@ -57,13 +57,13 @@ class CheckVariable(object):
 
     def pretty_format(self):
         result = str(self)
-        if self.unit:
+        if self.unit and self.value is not None:
             result = "%s %s" % (result, self.unit)
         return result
 
     def __str__(self):
         result = "%s" % self.value
-        if self.var_type == float:
+        if self.var_type == float and self.value is not None:
             result = "%0.2f" % self.value
         return result
 
@@ -73,7 +73,6 @@ class Nagios(object):
         self.service_name = service_name
         self.check_variables = {}
         self.check_result = STATES.index('UNKNOWN')
-        self.performance_data = []
         self.main = None
 
     def clear_results(self):
@@ -81,7 +80,6 @@ class Nagios(object):
             removes any results so you can re-use this object
         """
         self.check_result = STATES.index('UNKNOWN')
-        self.performance_data = []
         for variable in self.check_variables.values():
             variable.clear()
 
@@ -101,23 +99,33 @@ class Nagios(object):
         else:
             logging.debug("Not knowing variable %s, not adding check result." % var_name)
 
-    def generate_output(self, override_message=None):
+    def generate_performance_data(self):
+        performance_datapoints = []
         output = ""
+        for var in self.check_variables.values():
+            if var.has_perfdata():
+                performance_datapoints.append(var.get_perfdata())
+        if performance_datapoints:
+            output = " | %s" % ", ".join(performance_datapoints)
+        return output
+
+    def generate_return_code(self):
         return_code = STATES.index('UNKNOWN')
         for var in self.check_variables.values():
-            state = STATES[var.nagios_state]
             if var.name == self.main:
-                if override_message:
-                    return_code = var.nagios_state
-                    output = "%s %s - %s" % (self.service_name, state, override_message.strip())
-                elif var.value is not None:
-                    return_code = var.nagios_state
+                return_code = var.nagios_state
+        return return_code
+
+    def generate_output(self, override_message=None):
+        output = ""
+        return_code = self.generate_return_code()
+        if override_message is not None:
+            output = "%s %s - %s" % (self.service_name, STATES[return_code], override_message.strip())
+        else:
+            for var in self.check_variables.values():
+                state = STATES[var.nagios_state]
+                if var.name == self.main:
                     output = "%s %s - %s" % (self.service_name, state, var.pretty_format())
-                else:
-                    return_code = var.nagios_state
-                    output = "%s %s" % (self.service_name, state)
-            if var.has_perfdata():
-                self.performance_data.append(var.get_perfdata())
-        if self.performance_data:
-            output += " | %s" % ", ".join(self.performance_data)
+        output += self.generate_performance_data()
+
         return return_code, output
