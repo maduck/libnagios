@@ -51,7 +51,6 @@ class CheckVariable(object):
         if self.value is None:
             return
         evaluations = (self.ok_condition, self.warn_condition, self.crit_condition)
-        state = States.UNKNOWN
         for state, evaluation in enumerate(evaluations):
             if evaluation and evaluation(self.value):
                 self.nagios_state = States(state)
