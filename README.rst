@@ -26,7 +26,14 @@ An example::
   from libnagios import Nagios
 
   nagios_check = Nagios('Asset')
-  nagios_check.add_check_variable('asset', float, "EUR", lambda x: x > 10, lambda x: x > 5 and x <= 10, lambda x: x <= 5)
+
+  asset = CheckVariable('asset', float, 'EUR')
+  asset.ok_condition = lambda x: x > 10
+  asset.warn_condition = lambda x: 5 < x <= 10
+  asset.crit_condition = lambda x: x <= 5
+  self.inst.add_check_variable(asset)
+
+  nagios_check.add_check_variable(asset)
   
   nagios_check.add_check_result('asset', 12)
   code, output = nagios_check.generate_output()
@@ -34,4 +41,4 @@ An example::
   print(output)
   sys.exit(code)
 
-this should print 'Asset OK - 12.00 EUR', and exit with code '0'.
+this should print 'Asset OK - 12.00 EUR | asset=12.00', and exit with code '0'.

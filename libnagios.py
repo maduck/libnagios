@@ -1,25 +1,23 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
 import aenum
 
-logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARN)
+logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.ERROR)
 States = aenum.Enum('States', 'OK WARNING CRITICAL UNKNOWN', start=0)
 
 
 class CheckVariable(object):
     """ class for one single variable to check """
 
-    def __init__(self, name, var_type, unit, ok_condition, warn_condition, crit_condition, pre_processor):
+    def __init__(self, name, var_type, unit=None):
         self.name = name
         self.var_type = var_type
         self.unit = unit
-        self.ok_condition = ok_condition
-        self.warn_condition = warn_condition
-        self.crit_condition = crit_condition
+        self.ok_condition = None
+        self.warn_condition = None
+        self.crit_condition = None
         self.pre_processor = lambda x: x
-        if pre_processor:
-            self.pre_processor = pre_processor
         self.value = None
         self.check_result = None
         self.nagios_state = States.UNKNOWN
@@ -84,13 +82,12 @@ class Nagios(object):
         for variable in self.check_variables.values():
             variable.clear()
 
-    def add_check_variable(self, var_name, var_type, unit='', ok_condition=lambda x: True, warn_condition=None,
-                           crit_condition=None, pre_processor=None):
-        logging.debug("adding variable {} ({})".format(var_name, var_type.__name__))
+    def add_check_variable(self, variable):
+        logging.debug("adding variable {} ({})".format(
+            variable.name, variable.var_type.__name__))
         if len(self.check_variables) == 0:
-            self.main = var_name
-        self.check_variables[var_name] = CheckVariable(var_name, var_type, unit, ok_condition,
-                                                       warn_condition, crit_condition, pre_processor)
+            self.main = variable.name
+        self.check_variables[variable.name] = variable
 
     def add_check_result(self, var_name, check_result):
         variable = self.check_variables.get(var_name)

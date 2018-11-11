@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from libnagios import Nagios
+from libnagios import Nagios, CheckVariable
 
 
 class NagiosAssetTestCase(unittest.TestCase):
@@ -12,10 +12,13 @@ class NagiosAssetTestCase(unittest.TestCase):
         ok = lambda x: x > 10
         warn = lambda x: 5 < x <= 10
         crit = lambda x: x <= 5
-        pre_processor = lambda x: x
-        self.inst.add_check_variable('asset', float, "EUR",
-                                     ok, warn, crit, pre_processor)
-        self.inst.add_check_variable('time', float)
+        asset = CheckVariable('asset', float, 'EUR')
+        asset.ok_condition = ok
+        asset.warn_condition = warn
+        asset.crit_condition = crit
+        self.inst.add_check_variable(asset)
+        time = CheckVariable('time', float)
+        self.inst.add_check_variable(time)
 
     def run_single_test(self, test):
         for var in test['vars']:
@@ -40,9 +43,11 @@ class NagiosAssetTestCase(unittest.TestCase):
     def testWarning(self):
         tests = (
             {'vars': {'asset': '5.1', 'time': '3.9'},
-             'expected': (1, 'Asset WARNING - 5.10 EUR | asset=5.10, time=3.90')},
+             'expected': (
+                 1, 'Asset WARNING - 5.10 EUR | asset=5.10, time=3.90')},
             {'vars': {'asset': '7', 'time': '2.4'},
-             'expected': (1, 'Asset WARNING - 7.00 EUR | asset=7.00, time=2.40')},
+             'expected': (
+                 1, 'Asset WARNING - 7.00 EUR | asset=7.00, time=2.40')},
             {'vars': {'asset': '10'},
              'expected': (1, 'Asset WARNING - 10.00 EUR | asset=10.00')},
         )
@@ -51,9 +56,11 @@ class NagiosAssetTestCase(unittest.TestCase):
     def testCritical(self):
         tests = (
             {'vars': {'asset': '5', 'time': '3.9'},
-             'expected': (2, 'Asset CRITICAL - 5.00 EUR | asset=5.00, time=3.90')},
+             'expected': (
+                 2, 'Asset CRITICAL - 5.00 EUR | asset=5.00, time=3.90')},
             {'vars': {'asset': '2', 'time': '2.4'},
-             'expected': (2, 'Asset CRITICAL - 2.00 EUR | asset=2.00, time=2.40')},
+             'expected': (
+                 2, 'Asset CRITICAL - 2.00 EUR | asset=2.00, time=2.40')},
             {'vars': {'asset': '-10'},
              'expected': (2, 'Asset CRITICAL - -10.00 EUR | asset=-10.00')},
         )
