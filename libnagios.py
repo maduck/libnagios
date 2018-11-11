@@ -48,11 +48,14 @@ class CheckVariable(object):
     def set_state(self):
         if self.value is None:
             return
-        evaluations = (self.ok_condition, self.warn_condition, self.crit_condition)
+        evaluations = (self.ok_condition,
+                       self.warn_condition,
+                       self.crit_condition)
         for state, evaluation in enumerate(evaluations):
             if evaluation and evaluation(self.value):
                 self.nagios_state = States(state)
-        logging.debug("Variable {} yields nagios state {}".format(self.name, self.nagios_state.name))
+        logging.debug("Variable {} yields nagios state {}".format(
+            self.name, self.nagios_state.name))
 
     def pretty_format(self):
         result = str(self)
@@ -92,10 +95,14 @@ class Nagios(object):
     def add_check_result(self, var_name, check_result):
         variable = self.check_variables.get(var_name)
         if variable is not None:
-            logging.debug("Adding check result '{}' to variable {}".format(check_result, var_name))
+            logging.debug(
+                "Adding check result '{}' to variable {}".format(check_result,
+                                                                 var_name))
             variable.set_check_result(check_result)
         else:
-            logging.debug("Not knowing variable {}, not adding check result.".format(var_name))
+            logging.debug(
+                "Not knowing variable {}, not adding check result.".format(
+                    var_name))
 
     def generate_performance_data(self):
         performance_datapoints = []
@@ -121,6 +128,7 @@ class Nagios(object):
         state = States(return_code).name
         output = "{} {} - {}".format(self.service_name, state, var_output)
         if override_message is not None:
-            output = "{} {} - {}".format(self.service_name, state, override_message.strip())
+            output = "{} {} - {}".format(self.service_name, state,
+                                         override_message.strip())
         output += self.generate_performance_data()
         return return_code, output
