@@ -6,10 +6,6 @@
    :alt: Coveralls
    :target: https://coveralls.io/github/maduck/libnagios
 
-.. image:: https://landscape.io/github/maduck/libnagios/master/landscape.svg?style=flat-square
-   :target: https://landscape.io/github/maduck/libnagios/master
-   :alt: Code Health
-
 .. image:: https://img.shields.io/codacy/grade/bbf4f311bc9246b5b07df02e4d7f39e5.svg?style=flat-square
    :target: https://www.codacy.com/app/maduck/libnagios
    :alt: Codacy grade
