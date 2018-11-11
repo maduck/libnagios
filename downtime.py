@@ -4,11 +4,15 @@
 import time
 import argparse
 
-parser = argparse.ArgumentParser(description="Schedule a downtime for a host and all of its services.")
-parser.add_argument("--hosts", "-H", nargs="+", help="list of hosts to schedule a downtime for", required=True)
-parser.add_argument("--duration", "-D", type=int, default=2, help="Downtime duration, defaults to %(default)d")
-parser.add_argument("--commandfile", "-c", default="/var/lib/nagios3/rw/nagios.cmd", type=argparse.FileType('a'),
-                    help="Location of Nagios command file, defaults to %(default)s")
+parser = argparse.ArgumentParser(
+    description="Schedule a downtime for a host and all of its services.")
+parser.add_argument("--hosts", "-H", nargs="+", required=True,
+                    help="list of hosts to schedule a downtime for")
+parser.add_argument("--duration", "-D", type=int, default=2,
+                    help="Downtime duration, defaults to %(default)d")
+parser.add_argument("--commandfile", "-c", type=argparse.FileType('a'),
+                    default="/var/lib/nagios3/rw/nagios.cmd",
+                    help="Nagios command file, defaults to %(default)s")
 
 
 args = parser.parse_args()
@@ -30,8 +34,8 @@ for host in args.hosts:
         "0",
         "{:0.0f}".format(downtime_length),
         "libnagios",
-        "CLI command",
+        "CLI command\n",
     ]
 
-    args.commandfile.write(";".join([host_downtime] + nagios_parameters) + "\n")
-    args.commandfile.write(";".join([service_downtime] + nagios_parameters) + "\n")
+    args.commandfile.write(";".join([host_downtime] + nagios_parameters))
+    args.commandfile.write(";".join([service_downtime] + nagios_parameters))
